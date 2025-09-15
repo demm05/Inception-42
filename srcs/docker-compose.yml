@@ -1,0 +1,21 @@
+services:
+  mariadb:
+    container_name: mariadb
+    build:
+      context: ./requirments/mariadb
+    volumes: ['db_data:/var/lib/mysql']
+    environment:
+      DB_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      DB_PASSWORD_FILE: /run/secrets/db_password
+      DB_DATABASE: ${DB_NAME}
+      DB_USER: ${DB_USER}
+    secrets: [db_password, db_root_password]
+    expose: ['3306']
+    # restart: always
+secrets:
+  db_root_password:
+    file: ../secrets/db_root_password.txt
+  db_password:
+    file: ../secrets/db_password.txt
+volumes:
+  db_data:
