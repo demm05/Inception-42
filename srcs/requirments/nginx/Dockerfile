@@ -3,16 +3,14 @@ FROM alpine:3.22.0
 RUN apk update && \
 	apk add --no-cache nginx
 
-RUN rm -rf /etc/nginx/nginx.conf; \
-	mkdir -p /var/log/nginx; \
-	mkdir -p /www/data; \
-	echo "<h1>Welcome to Nginx<h1>" > /www/data/index.html
+RUN adduser -D -g 'www' www
 
 COPY ./conf/nginx.conf /etc/nginx/nginx.conf
-COPY website /website
+COPY ./www /www
+
+COPY ./tools/run.sh /usr/local/bin/run.sh
+RUN chmod +x /usr/local/bin/run.sh
 
 EXPOSE 443
-EXPOSE 80
-EXPOSE 9191
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/usr/local/bin/run.sh"]

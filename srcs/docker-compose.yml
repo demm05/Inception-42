@@ -11,7 +11,27 @@ services:
       DB_USER: ${DB_USER}
     secrets: [db_password, db_root_password]
     expose: ['3306']
-    # restart: always
+    restart: always
+  nginx:
+    container_name: nginx
+    build:
+      context: ./requirments/nginx
+    environment:
+      DB_PASSWORD_FILE: /run/secrets/db_password
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+    ports: ['8080:80']
+    restart: always
+  wordpress:
+    container_name: wordpress
+    build:
+      context: ./requirments/wordpress
+    environment:
+      DB_PASSWORD_FILE: /run/secrets/db_password
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+    secrets: [db_password]
+    restart: always
 secrets:
   db_root_password:
     file: ../secrets/db_root_password.txt
