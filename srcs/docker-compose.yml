@@ -1,37 +1,45 @@
 services:
   mariadb:
     container_name: mariadb
-    build:
-      context: ./requirments/mariadb
-    volumes: ['db_data:/var/lib/mysql']
+    build: requirments/mariadb
+    volumes: "db_data:/var/lib/mysql"
     environment:
       DB_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
       DB_PASSWORD_FILE: /run/secrets/db_password
       DB_DATABASE: ${DB_NAME}
       DB_USER: ${DB_USER}
     secrets: [db_password, db_root_password]
-    expose: ['3306']
     restart: always
+    networks:
+      - inception
   nginx:
     container_name: nginx
-    build:
-      context: ./requirments/nginx
+    build: requirments/nginx
+    volumes: "wp_data:/var/www/html"
     environment:
       DB_PASSWORD_FILE: /run/secrets/db_password
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
-    ports: ['8080:80']
+    ports: ["8080:80"]
     restart: always
+    depends_on:
+      - wordpress
+    networks:
+      - inception
   wordpress:
     container_name: wordpress
-    build:
-      context: ./requirments/wordpress
+    build: requirments/wordpress
+    volumes: "wp_data:/var/www/html"
     environment:
       DB_PASSWORD_FILE: /run/secrets/db_password
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
     secrets: [db_password]
     restart: always
+    depends_on:
+      - mariadb
+    networks:
+      - inception
 secrets:
   db_root_password:
     file: ../secrets/db_root_password.txt
@@ -39,3 +47,7 @@ secrets:
     file: ../secrets/db_password.txt
 volumes:
   db_data:
+  wp_data:
+networks:
+  inception:
+    driver: bridge

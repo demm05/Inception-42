@@ -1,24 +1,28 @@
-FROM debian:12.12-slim
+FROM alpine:3.19
 
-# Dependencies
-RUN apt update && apt install -y \
+# Install PHP and necessary extensions
+# Note: PHP versions in Alpine repositories change. verify version (e.g., php81, php82, or just php)
+RUN apk update && apk upgrade && apk add --no-cache \
     php \
     php-fpm \
-    php-mysql \
-    php-curl \
+    php-mysqli \
     php-json \
-    php-xml \
+    php-curl \
+    php-dom \
+    php-exif \
+    php-fileinfo \
     php-mbstring \
-    php-bcmath \
-    php-imagick \
-    php-intl \
+    php-openssl \
+    php-xml \
     php-zip \
-    curl \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    wget \
+    unzip
 
-COPY ./tools/run.sh /usr/local/bin/run.sh
+RUN sed -i 's/listen = 127.0.0.1:9000/listen = 9000/g' /etc/php82/php-fpm.d/www.conf
 
+COPY tools/run.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/run.sh
 
-CMD ["/usr/local/bin/run.sh"]
+EXPOSE 9000
+
+ENTRYPOINT ["/usr/local/bin/run.sh"]

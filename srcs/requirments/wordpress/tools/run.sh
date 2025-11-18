@@ -1,53 +1,38 @@
-#!/bin/bash
+#!/bin/sh
 
-set -e
-UPSTREAM_URL=https://wordpress.org/wordpress-6.8.3.tar.gz
+if [ ! -f /var/www/html/wp-config.php ]; then
+    wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+    chmod +x wp-cli.phar
+    mv wp-cli.phar /usr/local/bin/wp
 
-if [ -n "$DB_PASSWORD_FILE" ]; then
-	export DB_PASSWORD=$(cat "$DB_PASSWORD_FILE")
+    cd /var/www/html
+
+    wp core download --allow-root
+
+    wp config create \
+        --dbname=$MYSQL_DATABASE \
+        --dbuser=$MYSQL_USER \
+        --dbpass=$MYSQL_PASSWORD \
+        --dbhost=mariadb \
+        --allow-root
+
+    wp core install \
+        --url=$DOMAIN_NAME \
+        --title=$SITE_TITLE \
+        --admin_user=$WP_ADMIN_USER \
+        --admin_password=$WP_ADMIN_PASSWORD \
+        --admin_email=$WP_ADMIN_EMAIL \
+        --skip-email \
+        --allow-root
+
+    # Create the second user (Editor/Author)
+    # Fulfills requirement 
+    wp user create \
+        $WP_USER \
+        $WP_EMAIL \
+        --role=author \
+        --user_pass=$WP_PASSWORD \
+        --allow-root
 fi
 
-if [ -z "$DB_NAME" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASSWORD" ] || [ -z "$DB_HOST" ]; then
-	echo "[!] ERROR: One or more required environment variables are not set."
-	exit 1
-fi
-
-if [ -d "/srv/www/wordpress/wp-config.php" ]; then
-	echo "[i] Wordpress is already installed."
-else
-    mkdir -p /srv/www
-    chown www-data: /srv/www
-
-    curl -fsSL $UPSTREAM_URL | tar zx -C /srv/www
-    chown www-data: /srv/www/wordpress
-
-    SALTS=$(curl -fsSL https://api.wordpress.org/secret-key/1.1/salt/)
-
-    cat << EOF > /srv/www/wordpress/wp-config.php 
-<?php
-define('DB_NAME', '$DB_NAME');
-define('DB_USER', '$DB_USER');
-define('DB_PASSWORD', '$DB_PASSWORD');
-define('DB_HOST', '$DB_HOST');
-define('WP_CONTENT_DIR', '/var/lib/wordpress/wp-content');
-
-$SALTS
-
-$table_prefix = 'wp_';
-
-define( 'WP_DEBUG', false );
-
-if ( ! defined( 'ABSPATH' ) ) {
-        define( 'ABSPATH', __DIR__ . '/' );
-}
-
-require_once ABSPATH . 'wp-settings.php';
-
-?>
-EOF
-
-    chown www-data: /srv/www/wordpress/wp-config.php
-
-fi
-
-php8.2-fpm -F
+exec php-fpm82 -F
