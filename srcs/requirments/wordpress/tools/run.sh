@@ -18,6 +18,7 @@ if [ ! -f /var/www/html/wp-config.php ]; then
 
     wp core install \
         --url=$DOMAIN_NAME \
+        --url=localhost\
         --title=$SITE_TITLE \
         --admin_user=$WP_ADMIN_USER \
         --admin_password=$WP_ADMIN_PASSWORD \

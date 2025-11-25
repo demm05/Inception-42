@@ -2,7 +2,8 @@ services:
   mariadb:
     container_name: mariadb
     build: requirments/mariadb
-    volumes: "db_data:/var/lib/mysql"
+    volumes: 
+      - "db_data:/var/lib/mysql"
     environment:
       DB_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
       DB_PASSWORD_FILE: /run/secrets/db_password
@@ -15,12 +16,13 @@ services:
   nginx:
     container_name: nginx
     build: requirments/nginx
-    volumes: "wp_data:/var/www/html"
+    volumes: 
+    - "wp_data:/var/www/html"
     environment:
       DB_PASSWORD_FILE: /run/secrets/db_password
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
-    ports: ["8080:80"]
+    ports: ["8443:443"]
     restart: always
     depends_on:
       - wordpress
@@ -29,7 +31,8 @@ services:
   wordpress:
     container_name: wordpress
     build: requirments/wordpress
-    volumes: "wp_data:/var/www/html"
+    volumes: 
+    - "wp_data:/var/www/html"
     environment:
       DB_PASSWORD_FILE: /run/secrets/db_password
       DB_NAME: ${DB_NAME}
