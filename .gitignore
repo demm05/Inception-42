@@ -1,0 +1,4 @@
+secrets/*
+!secrets/.gitkeep
+*.log
+.DS_Store
